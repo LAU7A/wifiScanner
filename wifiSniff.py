@@ -64,13 +64,7 @@ def checkMacAddress(mac):
 	return True
 
 def handleAPPkts(verbose, bssid, essid):
-	#print(f'bssid: {bssid}')
-	#print(f'essid: {essid}')
 	def handler(pkt):
-		#print('inside handler')
-		#print(f'verbose: {verbose}')
-		#print(f'bssid: {bssid}')
-		#print(f'essid: {essid}')
 		global total_count
 		total_count += 1
 		if(verbose == True):
@@ -78,14 +72,13 @@ def handleAPPkts(verbose, bssid, essid):
 		if(pkt.haslayer(Dot11) and pkt.haslayer(Dot11Elt)):
 			if(pkt[Dot11].type == 0 and pkt[Dot11].subtype == 8):
 				det=''
-				#print(f'{pkt[Dot11].addr2} - {pkt[Dot11].addr2.replace(":","").lower()} - {bssid}')
 				#It's a Beacon Frame
 				if(bssid == None and essid == None):
-					det = f'{pkt[Dot11].channel} - {pkt[Dot11].addr2} - {pkt[Dot11Elt].info.decode("utf-8")}'
+					det = f'{pkt[Dot11].channel:02} - {pkt[Dot11].addr2} - {pkt[Dot11Elt].info.decode("utf-8")}'
 				elif(bssid is not None and pkt[Dot11].addr2.replace(':','').lower() == bssid):
-					det = f'{pkt[Dot11].channel} - {pkt[Dot11].addr2} - {pkt[Dot11Elt].info.decode("utf-8")}'
-				elif(essid is not None and essid.lower() in pktt[Dot11].payload.info.lower()):
-					det = f'{pkt[Dot11].channel} - {pkt[Dot11].addr2} - {pkt[Dot11Elt].info.decode("utf-8")}'
+					det = f'{pkt[Dot11].channel:02} - {pkt[Dot11].addr2} - {pkt[Dot11Elt].info.decode("utf-8")}'
+				elif(essid is not None and essid.lower().strip() in pkt[Dot11Elt].info.decode("utf-8").lower().strip()):
+					det = f'{pkt[Dot11].channel:02} - {pkt[Dot11].addr2} - {pkt[Dot11Elt].info.decode("utf-8")}'
 				if(det not in pkt_list):
 					pkt_list.append(det)
 					if(verbose == True):
@@ -108,16 +101,12 @@ def handleAPPkts(verbose, bssid, essid):
 def getAPs(channels, interface, bssid, essid, verbose):
     #Function that gets Clients for a specific Access Point
 	for i in channels:
-		#log.info(f'Jumping to #channel {i} on interface: {interface}')
-		print(f'#channel {i} on: {interface}')
+		if(verbose == True):
+			print(f'#channel {i} on: {interface}')
 		command = f'iw dev {interface} set channel {i}'
 		os.system(command)
 		#Sleep 1 sec so that the monitor device is not overloaded
 		time.sleep(1)
-		#print('inside getAps')
-		#print(f'verbose: {verbose}')
-		#print(f'bssid: {bssid}')
-		#print(f'essid: {essid}')
 		sniff(iface=interface, count=packet_count, prn=handleAPPkts(verbose, bssid, essid))
 		pkt_list.sort()
 	for i in pkt_list:
@@ -158,10 +147,6 @@ def main():
 		if(args.essid is not None):
 			essid = args.essid
 		if(args.access_point):
-			#print('inside main')
-			#print(f'verbose: {verbose}')
-			#print(f'bssid: {bssid}')
-			#print(f'essid: {essid}')
 			getAPs(channels=channels, interface=interface, bssid=bssid, essid=essid, verbose=verbose)
 		elif(args.deauth):
 			if(bssid == None and essid == None):
