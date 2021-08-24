@@ -112,6 +112,10 @@ def getAPs(channels, interface, bssid, essid, verbose):
 	for i in pkt_list:
 		print(i)
 
+def deauthAP(channels, interface, bssid, essid):
+	command = 'aireplay-ng -0 5 -a {bssid} {interface}'
+	os.system(f'{command}')
+
 def main():
 	try:
 		interface = 'mon0'
@@ -129,7 +133,7 @@ def main():
 		parser.add_argument('-a','--access-point', help='Shows only Access Points', action='store_true')
 		parser.add_argument('-e','--essid', help='Shows stations for this specific ESSID (name)', type=str)
 		parser.add_argument('-b','--bssid', help='Shows stations for this specific BSSID (MAC address)', type=str)
-		parser.add_argument('-d','--deauth', help='deauth every station of the specificied AP (bssid or essid)', type=str)
+		parser.add_argument('-d','--deauth', help='deauth every station of the specificied AP (bssid or essid)', action='store_true')
 		parser.add_argument('-v','--verbose', help='Shows only Access Points', action='store_true')
 		args = parser.parse_args()
 		if(args.channel is not None):
@@ -147,8 +151,14 @@ def main():
 		if(args.essid is not None):
 			essid = args.essid
 		if(args.access_point):
+			if(args.deauth):
+				print('Options access-point and deauth are mutually exclusive')
+				sys.exit(1)
 			getAPs(channels=channels, interface=interface, bssid=bssid, essid=essid, verbose=verbose)
 		elif(args.deauth):
+			if(args.access_point):
+				print('Options access-point and deauth are mutually exclusive')
+				sys.exit(1)
 			if(bssid == None and essid == None):
 				print('This option needs bssid (-b) or essid (-e)')
 			else:
