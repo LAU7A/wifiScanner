@@ -63,13 +63,13 @@ def checkMacAddress(mac):
 			return False
 	return True
 
-def handleAPPkts(verbose, bssid, essid):
+def handleAPPkts(verbose, bssid, essid, channel):
 	def handler(pkt):
 		global total_count
 		total_count += 1
 		#if(verbose == True):
 			#print(f'{total_count} - {len(pkt_list)} - \r', end='')
-		print(f'{total_count} - {len(pkt_list)} - \r', end='')
+		print(f'channel {channel}: {total_count} - total stations: {len(pkt_list)} - \r', end='')
 		if(pkt.haslayer(Dot11) and pkt.haslayer(Dot11Elt)):
 			if(pkt[Dot11].type == 0 and pkt[Dot11].subtype == 8):
 				det=''
@@ -101,14 +101,14 @@ def handleAPPkts(verbose, bssid, essid):
 
 def getAPs(channels, interface, bssid, essid, verbose):
     #Function that gets Clients for a specific Access Point
-	for i in channels:
+	for channel in channels:
 		if(verbose == True):
-			print(f'#channel {i} on: {interface}')
-		command = f'iw dev {interface} set channel {i}'
+			print(f'#channel {channel} on: {interface}')
+		command = f'iw dev {interface} set channel {channel}'
 		os.system(command)
 		#Sleep 1 sec so that the monitor device is not overloaded
 		time.sleep(1)
-		sniff(iface=interface, count=packet_count, prn=handleAPPkts(verbose, bssid, essid))
+		sniff(iface=interface, count=packet_count, prn=handleAPPkts(verbose, bssid, essid, channel))
 		pkt_list.sort()
 	if(verbose):
 		os.system('clear')
@@ -122,6 +122,7 @@ def deauthAP(channels, interface, bssid, essid):
 
 def main():
 	try:
+		global packet_count
 		interface = 'mon0'
 		channels = ['1','6','11'] #Each channel listens to ±2 channels in frequency so the complete spectrum can be listened with these 3 channels
 		bssid = None
@@ -134,7 +135,7 @@ def main():
 		#Argument list
 		parser.add_argument('-c','--channel', help='Selects (comma separated) channels, if none selected jumps through all (1, 6, 11)')
 		parser.add_argument('-i','--interface', help='Selects specific interface (default mon0)', type=str)
-		parser.add_argument('-p','--packets', help='Scan a specific amount of packets for each channel (default 500)', type=str)
+		parser.add_argument('-p','--packets', help='Scan a specific amount of packets for each channel (default 500)', type=int)
 		parser.add_argument('-a','--access-point', help='Shows only Access Points', action='store_true')
 		parser.add_argument('-d','--deauth', help='deauth every station of the specificied AP (bssid or essid)', action='store_true')
 		parser.add_argument('-e','--essid', help='Shows stations for this specific ESSID (name)', type=str)
