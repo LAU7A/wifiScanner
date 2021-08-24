@@ -67,8 +67,9 @@ def handleAPPkts(verbose, bssid, essid):
 	def handler(pkt):
 		global total_count
 		total_count += 1
-		if(verbose == True):
-			print(f'{total_count} - {len(pkt_list)} - \r', end='')
+		#if(verbose == True):
+			#print(f'{total_count} - {len(pkt_list)} - \r', end='')
+		print(f'{total_count} - {len(pkt_list)} - \r', end='')
 		if(pkt.haslayer(Dot11) and pkt.haslayer(Dot11Elt)):
 			if(pkt[Dot11].type == 0 and pkt[Dot11].subtype == 8):
 				det=''
@@ -109,6 +110,9 @@ def getAPs(channels, interface, bssid, essid, verbose):
 		time.sleep(1)
 		sniff(iface=interface, count=packet_count, prn=handleAPPkts(verbose, bssid, essid))
 		pkt_list.sort()
+	if(verbose):
+		os.system('clear')
+		print(f'Results: =====================')
 	for i in pkt_list:
 		print(i)
 
@@ -130,16 +134,19 @@ def main():
 		#Argument list
 		parser.add_argument('-c','--channel', help='Selects (comma separated) channels, if none selected jumps through all (1, 6, 11)')
 		parser.add_argument('-i','--interface', help='Selects specific interface (default mon0)', type=str)
+		parser.add_argument('-p','--packets', help='Scan a specific amount of packets for each channel (default 500)', type=str)
 		parser.add_argument('-a','--access-point', help='Shows only Access Points', action='store_true')
+		parser.add_argument('-d','--deauth', help='deauth every station of the specificied AP (bssid or essid)', action='store_true')
 		parser.add_argument('-e','--essid', help='Shows stations for this specific ESSID (name)', type=str)
 		parser.add_argument('-b','--bssid', help='Shows stations for this specific BSSID (MAC address)', type=str)
-		parser.add_argument('-d','--deauth', help='deauth every station of the specificied AP (bssid or essid)', action='store_true')
-		parser.add_argument('-v','--verbose', help='Shows only Access Points', action='store_true')
+		parser.add_argument('-v','--verbose', help='Verbose mode on', action='store_true')
 		args = parser.parse_args()
 		if(args.channel is not None):
 			channels = [ x.strip(',') for x in args.channel.split(',') ]
 		if(args.interface is not None):
 			interface = args.interface
+		if(args.packets is not None):
+			packet_count = args.packets
 		if(args.verbose == True):
 			verbose = True
 		if(args.bssid is not None):
@@ -173,8 +180,8 @@ def main():
 		print('Error: ' + str(e))
 
 		#TODO:
-			#List AP
-			#Show amount of packets captured for each AP
+			#List AP	####### DONE #######
+			#Show amount of packets captured for each AP ####### DONE #######
 			#List all Clients for AP
 			#Deauth attack
 			#Log as follows: date-time-AP-Client-Prev_Connected_AP
